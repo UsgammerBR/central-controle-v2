@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useReducer, useRef, useMemo } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';

@@ -22,7 +22,7 @@ import { getFormattedDate, isChristmasPeriod, isItemActive, generateMonthlyRepor
 
 const getCategoryIcon = (category: EquipmentCategory) => {
     switch(category) {
-        case EquipmentCategory.BOX: return (props: any) => <IconPlus {...props}/>; // Fallback or specific icons
+        case EquipmentCategory.BOX: return (props: any) => <IconPlus {...props}/>; 
         case EquipmentCategory.BOX_SOUND: return (props: any) => <IconPlus {...props}/>;
         case EquipmentCategory.CONTROLE: return (props: any) => <IconPlus {...props}/>;
         case EquipmentCategory.CAMERA: return IconCameraLens;
@@ -31,7 +31,6 @@ const getCategoryIcon = (category: EquipmentCategory) => {
     }
 };
 
-// Re-importing specific icons for categories to match original design
 import { IconBox, IconSpeaker, IconRemote, IconChip, IconStack } from './components/icons';
 const getCategoryIconFixed = (category: EquipmentCategory) => {
     switch(category) {
@@ -50,13 +49,11 @@ const AppContent = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
-  // Carregar notificações do localStorage
   useEffect(() => {
     const saved = localStorage.getItem('equipment_notifications');
     if (saved) setNotifications(JSON.parse(saved));
   }, []);
 
-  // Salvar notificações
   useEffect(() => {
     localStorage.setItem('equipment_notifications', JSON.stringify(notifications));
   }, [notifications]);

@@ -1,0 +1,7 @@
+{
+  "name": "Remix: Controle Box",
+  "description": "Gerenciamento diário de equipamentos. Acesse em: https://ais-pre-n5gwdogegxuvp3vvliziyx-94973630035.us-west2.run.app. Sincronização automática e QR Code.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

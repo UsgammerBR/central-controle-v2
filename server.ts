@@ -11,8 +11,8 @@ async function startServer() {
   app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
   // User-specific file-based database
-  const DB_DIR = path.resolve("./backups");
-  if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR);
+  const DB_DIR = path.resolve("./src/backups");
+  if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
   
   const getDBPath = (email: string) => {
     const safeEmail = (email || 'default').replace(/[^a-z0-9@.]/gi, '_').toLowerCase();

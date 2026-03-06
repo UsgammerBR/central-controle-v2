@@ -45,6 +45,7 @@ const getCategoryIconFixed = (category: EquipmentCategory) => {
     }
 };
 
+// Main App Component - Updated to ensure GitHub sync
 const AppContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);

@@ -1,20 +1,28 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Controle de Equipamentos
 
-# Run and deploy your AI Studio app
+Sistema de gerenciamento diário de equipamentos com sincronização automática e suporte a QR Code.
 
-This contains everything you need to run your app locally.
+## Funcionalidades
 
-View your app in AI Studio: https://ai.studio/apps/2fabf5be-2c7c-487f-9ae8-9dcb14226698
+- Gerenciamento de equipamentos por categorias.
+- Sincronização automática com o servidor.
+- Geração de relatórios em PDF.
+- Suporte a QR Code para identificação.
+- Galeria de fotos para cada item.
+- Notificações em tempo real.
 
-## Run Locally
+## Como usar
 
-**Prerequisites:**  Node.js
+1. Acesse o aplicativo através da URL fornecida.
+2. Faça o login ou use o perfil padrão.
+3. Adicione ou remova equipamentos conforme necessário.
+4. Os dados são salvos automaticamente no servidor.
 
+## Desenvolvimento
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+O projeto utiliza:
+- React 19
+- Tailwind CSS 4
+- Express 5
+- Vite 6
+- Motion para animações

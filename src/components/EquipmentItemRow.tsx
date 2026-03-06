@@ -47,7 +47,6 @@ export const EquipmentItemRow: React.FC<EquipmentItemRowProps> = ({
         if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
         }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
         onCollapse();
         setIsCollapsed(true);
         setTimeout(() => {
@@ -153,6 +152,7 @@ export const EquipmentItemRow: React.FC<EquipmentItemRowProps> = ({
                                     <input 
                                         ref={serialRef}
                                         type="text" 
+                                        inputMode="numeric"
                                         placeholder="SERIAL" 
                                         value={item.serial} 
                                         onChange={e => handleSerialChange(e.target.value)}

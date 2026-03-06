@@ -113,7 +113,7 @@ const AppContent = () => {
   }, [currentDate]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000);
+    const timer = setTimeout(() => setIsLoading(false), 800);
     
     const savedData = localStorage.getItem('equipmentData');
     if (savedData) dispatch({ type: 'SET_DATA', payload: JSON.parse(savedData) });
@@ -292,6 +292,34 @@ const AppContent = () => {
         }
     }
     setCameraTarget(null);
+  };
+
+  const handleDeletePhoto = (photoIndex: number) => {
+    if (!galleryItem) return;
+    const updatedPhotos = [...galleryItem.photos];
+    updatedPhotos.splice(photoIndex, 1);
+    
+    // Find category of the item
+    let itemCategory: EquipmentCategory | null = null;
+    CATEGORIES.forEach(cat => {
+        if (currentDayData[cat]?.find(i => i.id === galleryItem.id)) {
+            itemCategory = cat;
+        }
+    });
+
+    if (itemCategory) {
+        const updatedItem = { ...galleryItem, photos: updatedPhotos };
+        dispatch({
+            type: 'UPDATE_ITEM',
+            payload: {
+                date: formattedDate,
+                category: itemCategory,
+                item: updatedItem
+            }
+        });
+        setGalleryItem(updatedItem);
+        addNotification('Foto Removida', `Uma foto foi excluída do item.`);
+    }
   };
 
   const handleImportCloud = async () => {
@@ -556,7 +584,7 @@ const AppContent = () => {
       </footer>
 
       <AnimatePresence>
-        {galleryItem && <PhotoGalleryModal item={galleryItem} onClose={() => setGalleryItem(null)} />}
+        {galleryItem && <PhotoGalleryModal item={galleryItem} onClose={() => setGalleryItem(null)} onDeletePhoto={handleDeletePhoto} />}
         {cameraTarget && <CameraModal target={cameraTarget.item} onClose={() => setCameraTarget(null)} onCapture={handleCameraCapture} />}
 
         {activeModal === 'search' && (

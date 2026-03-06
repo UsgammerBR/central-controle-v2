@@ -12,8 +12,7 @@ export const getFormattedDate = (date: Date): string => {
 export const isChristmasPeriod = (): boolean => {
   const now = new Date();
   const month = now.getMonth(); 
-  const day = now.getDate();
-  return month === 11 && day >= 20 && day <= 25;
+  return month === 11; // Dezembro inteiro
 };
 
 export const isItemActive = (item: EquipmentItem): boolean => 

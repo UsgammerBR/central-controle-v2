@@ -1,6 +1,6 @@
 {
   "name": "Remix: Controle Box",
-  "description": "Gerenciamento diário de equipamentos. Sincronização automática e QR Code. Atualizado em: 2026-03-05.",
+  "description": "Gerenciamento diário de equipamentos. Sincronização automática e QR Code. Correção de ícones e base path para GitHub Pages.",
   "requestFramePermissions": [
     "camera"
   ]

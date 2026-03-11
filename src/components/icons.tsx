@@ -3,7 +3,7 @@ import React from 'react';
 
 // Ícone principal do App com detalhe de Natal condicional
 export const CustomMenuIcon = ({ className = 'w-10 h-10', isChristmas = false }: { className?: string; isChristmas?: boolean }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className={className} shapeRendering="geometricPrecision" width="40" height="40">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className={className} shapeRendering="geometricPrecision" width="32" height="32">
     <defs>
       <linearGradient id="bgIcon" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor={isChristmas ? "#f87171" : "#f1f5f9"} /> 
@@ -44,8 +44,8 @@ export const CustomMenuIcon = ({ className = 'w-10 h-10', isChristmas = false }:
   </svg>
 );
 
-export const LoadingBoxIcon = ({ className = 'w-32 h-32' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className={className} shapeRendering="geometricPrecision" width="128" height="128">
+export const LoadingBoxIcon = ({ className = 'w-24 h-24' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className={className} shapeRendering="geometricPrecision" width="64" height="64">
     <rect x="20" y="30" width="60" height="40" rx="12" fill="#0f172a" />
     <circle cx="70" cy="50" r="3" fill="#22c55e">
       <animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite" />

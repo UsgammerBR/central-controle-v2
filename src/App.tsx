@@ -373,18 +373,18 @@ const AppContent = () => {
           <div className="fixed top-0 left-0 right-0 h-48 pointer-events-none z-[60] overflow-hidden">
                 <div className="absolute left-0 top-14 animate-[santaRide_24s_linear_infinite] flex items-center">
                     <div className="relative flex items-end">
-                        <span className="text-8xl drop-shadow-[0_10px_20px_rgba(0,0,0,1)]" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🛷</span>
-                        <span className="absolute bottom-6 left-10 text-6xl drop-shadow-lg" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🎅</span>
-                        <div className="absolute bottom-8 left-18 flex items-baseline gap-0.5">
-                            <span className="text-3xl drop-shadow-md">🎁</span>
-                            <span className="text-2xl drop-shadow-md">📦</span>
-                            <span className="text-2xl drop-shadow-md">🎁</span>
+                        <span className="text-5xl sm:text-8xl drop-shadow-[0_10px_20px_rgba(0,0,0,1)]" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🛷</span>
+                        <span className="absolute bottom-4 left-6 sm:bottom-6 sm:left-10 text-4xl sm:text-6xl drop-shadow-lg" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🎅</span>
+                        <div className="absolute bottom-6 left-12 sm:bottom-8 sm:left-18 flex items-baseline gap-0.5">
+                            <span className="text-xl sm:text-3xl drop-shadow-md">🎁</span>
+                            <span className="text-lg sm:text-2xl drop-shadow-md">📦</span>
+                            <span className="text-lg sm:text-2xl drop-shadow-md">🎁</span>
                         </div>
                     </div>
-                    <div className="flex -space-x-5 items-center ml-14">
-                        <span className="text-5xl drop-shadow-2xl" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🦌</span>
-                        <span className="text-5xl drop-shadow-2xl" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🦌</span>
-                        <span className="text-5xl drop-shadow-2xl" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🦌</span>
+                    <div className="flex -space-x-3 sm:-space-x-5 items-center ml-8 sm:ml-14">
+                        <span className="text-3xl sm:text-5xl drop-shadow-2xl" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🦌</span>
+                        <span className="text-3xl sm:text-5xl drop-shadow-2xl" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🦌</span>
+                        <span className="text-3xl sm:text-5xl drop-shadow-2xl" style={{ transform: 'scaleX(-1)', display: 'inline-block' }}>🦌</span>
                     </div>
                 </div>
           </div>

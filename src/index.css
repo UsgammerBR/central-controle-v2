@@ -18,6 +18,11 @@ html, body {
   color: #0f172a; /* slate-900 */
 }
 
+svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 @keyframes twinkle {
   0%, 100% { opacity: 0.4; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1.1); }

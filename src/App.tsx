@@ -840,8 +840,41 @@ const AppContent = () => {
                                 // Profile Image in PDF
                                 if (userProfile.profileImage) {
                                     try {
-                                        // Add the image
-                                        doc.addImage(userProfile.profileImage, 'JPEG', 10, 5, 30, 30, undefined, 'FAST');
+                                        const imgProps = doc.getImageProperties(userProfile.profileImage);
+                                        const imgW = imgProps.width;
+                                        const imgH = imgProps.height;
+                                        const ratio = imgW / imgH;
+                                        
+                                        // Target area is a circle at (25, 20) with radius 15
+                                        // We want to cover a 30x30 square centered at (25, 20)
+                                        
+                                        doc.saveGraphicsState();
+                                        // Create circular clipping path
+                                        doc.circle(25, 20, 15, 'F');
+                                        doc.clip();
+                                        
+                                        let drawW, drawH, x, y;
+                                        if (ratio > 1) {
+                                            // Landscape: height is the constraint
+                                            drawH = 30;
+                                            drawW = 30 * ratio;
+                                            x = 25 - (drawW / 2);
+                                            y = 5;
+                                        } else {
+                                            // Portrait or square: width is the constraint
+                                            drawW = 30;
+                                            drawH = 30 / ratio;
+                                            x = 10;
+                                            y = 20 - (drawH / 2);
+                                        }
+                                        
+                                        doc.addImage(userProfile.profileImage, 'JPEG', x, y, drawW, drawH, undefined, 'FAST');
+                                        doc.restoreGraphicsState();
+                                        
+                                        // Add a subtle border over the clip
+                                        doc.setDrawColor(255, 255, 255);
+                                        doc.setLineWidth(0.5);
+                                        doc.circle(25, 20, 15, 'S');
                                     } catch (e) {
                                         console.error("Erro ao adicionar imagem ao PDF", e);
                                     }

@@ -125,29 +125,29 @@ export const EquipmentItemRow: React.FC<EquipmentItemRowProps> = ({
                         </button>
                     )}
                     
-                    <div className="min-w-[35px] flex flex-col items-center justify-center opacity-30">
-                        <span className="text-[8px] font-black text-slate-500">
+                    <div className="w-7 shrink-0 flex flex-col items-center justify-center opacity-30">
+                        <span className="text-[7px] font-black text-slate-500">
                             {new Date(item.createdAt || Date.now()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                     </div>
 
-                    <div className="flex-1 flex flex-col gap-1.5">
-                        <div className="flex gap-1">
-                            <div className="flex flex-col gap-1 flex-[0.35]">
+                    <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                        <div className="flex gap-1 items-center">
+                            <div className="flex flex-col gap-1 flex-[0.3] min-w-0">
                                 <div className="relative">
                                     <input 
                                         type="text" 
                                         inputMode="numeric"
-                                        placeholder="CONTRATO" 
+                                        placeholder="CTR" 
                                         value={item.contract} 
                                         onChange={e => handleContractChange(e.target.value)}
                                         onPaste={handleContractPaste}
-                                        className="w-full py-2 px-1 rounded-lg border border-slate-100 outline-none font-black text-[12px] bg-white text-slate-800 placeholder-slate-300 focus:border-blue-200 transition-all text-center shadow-sm"
+                                        className="w-full py-2 px-0 rounded-lg border border-slate-100 outline-none font-black text-[10px] sm:text-[11px] bg-white text-slate-800 placeholder-slate-300 focus:border-blue-200 transition-all text-center shadow-sm tracking-tighter"
                                     />
                                 </div>
                             </div>
                             
-                            <div className="flex flex-col gap-1 flex-[0.65]">
+                            <div className="flex flex-col gap-1 flex-[0.7] min-w-0">
                                 <div className="relative">
                                     <input 
                                         ref={serialRef}
@@ -157,18 +157,18 @@ export const EquipmentItemRow: React.FC<EquipmentItemRowProps> = ({
                                         value={item.serial} 
                                         onChange={e => handleSerialChange(e.target.value)}
                                         onPaste={handleSerialPaste}
-                                        className="w-full py-2 px-1 rounded-lg border border-slate-100 outline-none font-black text-[12px] bg-white text-slate-800 placeholder-slate-300 focus:border-blue-200 transition-all text-center shadow-sm"
+                                        className="w-full py-2 px-0 rounded-lg border border-slate-100 outline-none font-black text-[10px] sm:text-[11px] bg-white text-slate-800 placeholder-slate-300 focus:border-blue-200 transition-all text-center shadow-sm tracking-tighter"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex gap-1">
-                                <button onClick={() => onCamera(item)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111827] text-white active:scale-95 transition-all shadow-md">
-                                    <IconCameraLens className="w-4 h-4"/>
+                            <div className="flex gap-1 shrink-0">
+                                <button onClick={() => onCamera(item)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#111827] text-white active:scale-95 transition-all shadow-md">
+                                    <IconCameraLens className="w-3.5 h-3.5"/>
                                 </button>
-                                <button onClick={() => onGallery(item)} className={`w-8 h-8 flex items-center justify-center rounded-lg active:scale-95 transition-all border ${item.photos.length > 0 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-white text-slate-300 border-slate-100 shadow-sm'}`}>
+                                <button onClick={() => onGallery(item)} className={`w-7 h-7 flex items-center justify-center rounded-lg active:scale-95 transition-all border ${item.photos.length > 0 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-white text-slate-300 border-slate-100 shadow-sm'}`}>
                                     <div className="relative">
-                                        <IconGallery className="w-4 h-4"/>
+                                        <IconGallery className="w-3.5 h-3.5"/>
                                         <CountBadge count={item.photos.length} />
                                     </div>
                                 </button>

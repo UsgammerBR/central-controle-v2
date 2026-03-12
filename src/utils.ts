@@ -20,6 +20,68 @@ export const isItemActive = (item: EquipmentItem): boolean =>
     (item.serial && item.serial.trim() !== '') || 
     item.photos.length > 0;
 
+export const generateMonthlyTxt = (data: AppData, date: Date) => {
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const monthName = date.toLocaleDateString('pt-BR', { month: 'long' }).toUpperCase();
+    
+    let txt = `================================================\n`;
+    txt += `   CONTROLE DE EQUIPAMENTOS - ${monthName} ${year}\n`;
+    txt += `================================================\n\n`;
+
+    const sortedDates = Object.keys(data).sort();
+    let hasData = false;
+
+    sortedDates.forEach(dateStr => {
+        const d = new Date(dateStr + 'T12:00:00');
+        if (d.getMonth() === month && d.getFullYear() === year) {
+            const dayData = data[dateStr];
+            const dayItems: { cat: string, item: EquipmentItem }[] = [];
+            
+            CATEGORIES.forEach(cat => {
+                (dayData?.[cat] || []).filter(isItemActive).forEach(item => {
+                    dayItems.push({ cat, item });
+                });
+            });
+
+            if (dayItems.length > 0) {
+                hasData = true;
+                txt += `DIA ${d.getDate()} (${d.toLocaleDateString('pt-BR', { weekday: 'long' }).toUpperCase()})\n`;
+                txt += `------------------------------------------------\n`;
+                
+                dayItems.sort((a, b) => (a.item.createdAt || 0) - (b.item.createdAt || 0)).forEach(({ cat, item }) => {
+                    const time = new Date(item.createdAt || Date.now()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    txt += `[${time}] ${cat.padEnd(10)} | CTR: ${(item.contract || '---').padEnd(10)} | SN: ${item.serial || '---'}\n`;
+                });
+                txt += `\n`;
+            }
+        }
+    });
+
+    if (!hasData) txt += `Nenhum registro encontrado para este mês.\n`;
+
+    txt += `\n================================================\n`;
+    txt += `RESUMO DO FLUXO OPERACIONAL\n`;
+    txt += `------------------------------------------------\n`;
+    let totalGeral = 0;
+    CATEGORIES.forEach(cat => {
+        let count = 0;
+        sortedDates.forEach(dateStr => {
+            const d = new Date(dateStr + 'T12:00:00');
+            if (d.getMonth() === month && d.getFullYear() === year) {
+                count += (data[dateStr]?.[cat] || []).filter(isItemActive).length;
+            }
+        });
+        txt += `${cat.padEnd(15)}: ${String(count).padStart(3)} itens\n`;
+        totalGeral += count;
+    });
+    txt += `------------------------------------------------\n`;
+    txt += `VOLUME TOTAL    : ${String(totalGeral).padStart(3)} itens\n`;
+    txt += `================================================\n`;
+
+    return txt;
+};
+
 export const generateMonthlyReport = (data: AppData, date: Date) => {
     const month = date.getMonth();
     const year = date.getFullYear();

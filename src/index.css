@@ -16,6 +16,12 @@ html, body {
   padding: 0;
   height: 100%;
   color: #0f172a; /* slate-900 */
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 svg {

@@ -10,7 +10,8 @@ interface CameraModalProps {
 }
 
 export const CameraModal = ({ target, onClose, onCapture }: CameraModalProps) => {
-  const [mode, setMode] = useState<'qr' | 'photo'>('qr');
+  const isProfile = target === 'profile';
+  const [mode, setMode] = useState<'qr' | 'photo'>(isProfile ? 'photo' : 'qr');
   const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,7 +88,7 @@ export const CameraModal = ({ target, onClose, onCapture }: CameraModalProps) =>
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
         onCapture(dataUrl, 'photo');
         // If it's a profile photo, we close. If it's equipment, we might want to take more?
         // For now, let's close to keep it simple as per original flow
@@ -100,18 +101,25 @@ export const CameraModal = ({ target, onClose, onCapture }: CameraModalProps) =>
     <div className="fixed inset-0 z-[110] bg-black flex flex-col">
       <div className="flex justify-between items-center p-6">
         <div className="flex gap-4">
-          <button 
-            onClick={() => setMode('qr')}
-            className={`px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${mode === 'qr' ? 'bg-cyan-600 text-white' : 'bg-white/10 text-white/50'}`}
-          >
-            QR Code
-          </button>
-          <button 
-            onClick={() => setMode('photo')}
-            className={`px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${mode === 'photo' ? 'bg-cyan-600 text-white' : 'bg-white/10 text-white/50'}`}
-          >
-            Foto
-          </button>
+          {!isProfile && (
+            <>
+              <button 
+                onClick={() => setMode('qr')}
+                className={`px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${mode === 'qr' ? 'bg-cyan-600 text-white' : 'bg-white/10 text-white/50'}`}
+              >
+                QR Code
+              </button>
+              <button 
+                onClick={() => setMode('photo')}
+                className={`px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-widest transition-all ${mode === 'photo' ? 'bg-cyan-600 text-white' : 'bg-white/10 text-white/50'}`}
+              >
+                Foto
+              </button>
+            </>
+          )}
+          {isProfile && (
+            <span className="px-4 py-2 text-white font-black text-[10px] uppercase tracking-[4px]">Foto de Perfil</span>
+          )}
         </div>
         <button onClick={onClose} className="p-3 bg-white/10 rounded-full text-white active:scale-95 transition-all">
           <IconX className="w-6 h-6"/>

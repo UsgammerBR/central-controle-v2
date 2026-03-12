@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { IconCalendar, IconExport, IconSettings, IconInfo, IconX, CustomMenuIcon } from './icons';
+import { IconCalendar, IconExport, IconSettings, IconInfo, IconX, CustomMenuIcon, IconDownload } from './icons';
 import { UserProfile } from '../types';
 
 interface SideMenuProps {
@@ -9,9 +9,11 @@ interface SideMenuProps {
   onMenuClick: (modalName: string) => void;
   userProfile?: UserProfile;
   isChristmas?: boolean;
+  onInstallApp?: () => void;
+  canInstall?: boolean;
 }
 
-export const SideMenu = ({ isOpen, onClose, onMenuClick, userProfile, isChristmas }: SideMenuProps) => {
+export const SideMenu = ({ isOpen, onClose, onMenuClick, userProfile, isChristmas, onInstallApp, canInstall }: SideMenuProps) => {
 
   const menuItems = [
     { label: 'Calendário', icon: IconCalendar, modal: 'calendar' },
@@ -34,15 +36,9 @@ export const SideMenu = ({ isOpen, onClose, onMenuClick, userProfile, isChristma
         }`}
       >
         <div className="p-8 h-full flex flex-col">
-           <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center justify-between mb-12">
              <div className="active:scale-95 transition-all cursor-pointer">
-               {userProfile?.profileImage ? (
-                  <div className={`w-24 h-24 rounded-[2rem] border-2 ${isChristmas ? 'border-emerald-500/50' : 'border-slate-100'} overflow-hidden shadow-sm`}>
-                     <img src={userProfile.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                  </div>
-               ) : (
-                  <CustomMenuIcon className="w-24 h-24 drop-shadow-xl" isChristmas={isChristmas} />
-               )}
+                <CustomMenuIcon className="w-24 h-24 drop-shadow-xl" isChristmas={isChristmas} />
              </div>
              <button onClick={onClose} className="p-3 rounded-2xl bg-slate-50 border border-slate-100 active:scale-95 transition-all">
                 <IconX className="w-6 h-6 text-slate-400"/>
@@ -71,6 +67,20 @@ export const SideMenu = ({ isOpen, onClose, onMenuClick, userProfile, isChristma
                 </span>
               </button>
             ))}
+
+            {canInstall && (
+              <button 
+                onClick={() => { onInstallApp?.(); onClose(); }} 
+                className="flex items-center gap-4 p-4 rounded-[1.8rem] bg-blue-50 border border-blue-100 transition-all text-left active:scale-95 group mt-2"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center group-hover:scale-110 transition-all shadow-lg shadow-blue-600/20">
+                    <IconDownload className="w-5 h-5" />
+                </div>
+                <span className="font-black uppercase text-[9px] tracking-[4px] text-blue-900">
+                  Instalar App
+                </span>
+              </button>
+            )}
           </nav>
 
           <div className="pt-8 text-center flex flex-col items-center gap-4">

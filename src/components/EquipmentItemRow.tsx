@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { IconTrash, IconCameraLens, IconGallery } from './icons';
 import { CountBadge } from './CountBadge';
 import { EquipmentItem } from '../types';
@@ -163,15 +163,23 @@ export const EquipmentItemRow: React.FC<EquipmentItemRowProps> = ({
                             </div>
 
                             <div className="flex gap-1 shrink-0">
-                                <button onClick={() => onCamera(item)} className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#111827] text-white active:scale-95 transition-all shadow-md">
-                                    <IconCameraLens className="w-3.5 h-3.5"/>
-                                </button>
-                                <button onClick={() => onGallery(item)} className={`w-7 h-7 flex items-center justify-center rounded-lg active:scale-95 transition-all border ${item.photos.length > 0 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-white text-slate-300 border-slate-100 shadow-sm'}`}>
-                                    <div className="relative">
-                                        <IconGallery className="w-3.5 h-3.5"/>
-                                        <CountBadge count={item.photos.length} />
-                                    </div>
-                                </button>
+                            <motion.button 
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onCamera(item)} 
+                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#111827] text-white active:scale-95 transition-all shadow-md"
+                            >
+                                <IconCameraLens className="w-3.5 h-3.5"/>
+                            </motion.button>
+                            <motion.button 
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => onGallery(item)} 
+                                className={`w-7 h-7 flex items-center justify-center rounded-lg active:scale-95 transition-all border overflow-visible ${item.photos.length > 0 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-white text-slate-300 border-slate-100 shadow-sm'}`}
+                            >
+                                <div className="relative overflow-visible">
+                                    <IconGallery className="w-3.5 h-3.5"/>
+                                    <CountBadge count={item.photos.length} />
+                                </div>
+                            </motion.button>
                             </div>
                         </div>
                     </div>

@@ -20,13 +20,20 @@ export const isItemActive = (item: EquipmentItem): boolean =>
     (item.serial && item.serial.trim() !== '') || 
     item.photos.length > 0;
 
-export const generateMonthlyTxt = (data: AppData, date: Date) => {
+export const generateMonthlyTxt = (data: AppData, date: Date, userProfile?: { name: string; cpf?: string }) => {
     const month = date.getMonth();
     const year = date.getFullYear();
     const monthName = date.toLocaleDateString('pt-BR', { month: 'long' }).toUpperCase();
     
     let txt = `================================================\n`;
     txt += `   CONTROLE DE EQUIPAMENTOS - ${monthName} ${year}\n`;
+    txt += `================================================\n`;
+    if (userProfile?.name) {
+        txt += `RESPONSÁVEL: ${userProfile.name.toUpperCase()}\n`;
+    }
+    if (userProfile?.cpf) {
+        txt += `CPF: ${userProfile.cpf}\n`;
+    }
     txt += `================================================\n\n`;
 
     const sortedDates = Object.keys(data).sort();
@@ -122,4 +129,58 @@ export const generateMonthlyReport = (data: AppData, date: Date) => {
     report += `============================\n`;
     
     return report;
+};
+
+export const compressImage = (base64: string, maxWidth = 800, quality = 0.7, square = false): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (!base64 || !base64.startsWith('data:image')) {
+      reject(new Error('Invalid image data'));
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = base64;
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (square) {
+          const size = Math.min(width, height);
+          const xOffset = (width - size) / 2;
+          const yOffset = (height - size) / 2;
+          
+          canvas.width = Math.min(size, maxWidth);
+          canvas.height = Math.min(size, maxWidth);
+          
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, xOffset, yOffset, size, size, 0, 0, canvas.width, canvas.height);
+        } else {
+          if (width > maxWidth) {
+            height = (maxWidth / width) * height;
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+        }
+        
+        const compressed = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressed);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = (err) => reject(err);
+  });
 };

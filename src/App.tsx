@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useReducer, useRef, useMemo } from 'react';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { jsPDF } from 'jspdf';
 
 // Components
@@ -19,7 +19,7 @@ import {
 import { EquipmentCategory, AppData, EquipmentItem, UserProfile } from './types';
 import { CATEGORIES, HOLIDAYS_SP } from './constants';
 import { dataReducer, createEmptyDailyData, generateId } from './reducer';
-import { getFormattedDate, isChristmasPeriod, isItemActive, generateMonthlyReport, generateMonthlyTxt } from './utils';
+import { getFormattedDate, isChristmasPeriod, isItemActive, generateMonthlyReport, generateMonthlyTxt, compressImage } from './utils';
 
 const getCategoryIcon = (category: EquipmentCategory) => {
     switch(category) {
@@ -65,13 +65,33 @@ const AppContent = () => {
 
   const addNotification = (type: string, details: string) => {
     const newNotif = {
-        id: Date.now(),
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
         type,
         details
     };
     setNotifications(prev => [newNotif, ...prev].slice(0, 50));
     setHasNewNotifications(true);
+  };
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
   };
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -118,6 +138,19 @@ const AppContent = () => {
     const savedData = localStorage.getItem('equipmentData');
     if (savedData) dispatch({ type: 'SET_DATA', payload: JSON.parse(savedData) });
     
+    // Auto-shrink existing large profile images
+    if (userProfile.profileImage && userProfile.profileImage.length > 50000) {
+        compressImage(userProfile.profileImage, 180, 0.5, true).then(shrunk => {
+            setUserProfile(prev => ({ ...prev, profileImage: shrunk }));
+        }).catch(err => {
+            console.error("Failed to auto-shrink profile image", err);
+            // If it's corrupted, clear it
+            if (userProfile.profileImage.startsWith('data:image') === false) {
+                setUserProfile(prev => ({ ...prev, profileImage: '' }));
+            }
+        });
+    }
+
     const fetchServerData = async () => {
         try {
             const email = userProfile.email || 'default';
@@ -177,7 +210,12 @@ const AppContent = () => {
   }, [appData, isLoading]);
 
   useEffect(() => {
-    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+    try {
+      localStorage.setItem('userProfile', JSON.stringify(userProfile));
+    } catch (e) {
+      console.error("Failed to save userProfile to localStorage", e);
+      // If it fails, maybe the image is too big, but we are compressing it now
+    }
   }, [userProfile]);
 
   const currentDayData = useMemo(() => appData[formattedDate] || createEmptyDailyData(), [appData, formattedDate]);
@@ -298,11 +336,17 @@ const AppContent = () => {
     return results.sort((a, b) => (b.item.createdAt || 0) - (a.item.createdAt || 0));
   }, [appData, searchQuery]);
 
-  const handleCameraCapture = (data: string, type: 'qr' | 'photo') => {
+  const handleCameraCapture = async (data: string, type: 'qr' | 'photo') => {
     if (!cameraTarget) return;
 
     if (cameraTarget.item === 'profile') {
-        setUserProfile(prev => ({ ...prev, profileImage: data }));
+        try {
+            const compressed = await compressImage(data, 180, 0.5, true);
+            setUserProfile(prev => ({ ...prev, profileImage: compressed }));
+        } catch (e) {
+            console.error("Error compressing camera image", e);
+            setUserProfile(prev => ({ ...prev, profileImage: data }));
+        }
     } else {
         const item = cameraTarget.item as EquipmentItem;
         if (type === 'qr') {
@@ -402,6 +446,8 @@ const AppContent = () => {
         onMenuClick={setActiveModal} 
         userProfile={userProfile} 
         isChristmas={isChristmas} 
+        onInstallApp={handleInstallApp}
+        canInstall={!!deferredPrompt}
       />
 
       {isChristmas && (
@@ -429,13 +475,7 @@ const AppContent = () => {
         <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
                 <div onClick={() => setIsMenuOpen(true)} className="active:scale-95 transition-all cursor-pointer">
-                    {userProfile.profileImage ? (
-                        <div className="w-12 h-12 rounded-full border-2 border-slate-200 overflow-hidden shadow-sm">
-                            <img src={userProfile.profileImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                        </div>
-                    ) : (
-                        <CustomMenuIcon className="w-12 h-12 drop-shadow-md" isChristmas={isChristmas}/>
-                    )}
+                    <CustomMenuIcon className="w-12 h-12 drop-shadow-md" isChristmas={isChristmas}/>
                 </div>
                 <div className="flex flex-col">
                     <div className="flex items-center gap-1.5">
@@ -509,25 +549,32 @@ const AppContent = () => {
             <div className="flex gap-2 overflow-x-auto no-scrollbar py-3 px-2 -mx-2">
                 {CATEGORIES.map(cat => {
                     const Icon = getCategoryIconFixed(cat);
+                    const count = showAllTimeTotals ? categoryTotals[cat] : (appData[formattedDate]?.[cat]?.filter(isItemActive).length || 0);
                     return (
-                        <button 
+                        <motion.button 
                             key={cat}
+                            whileTap={{ scale: 0.92 }}
                             onClick={() => setActiveCategory(cat)}
-                            className={`flex flex-col items-center gap-1.5 min-w-[60px] p-2 rounded-[1.2rem] transition-all active:scale-95 relative ${activeCategory === cat ? 'bg-linear-to-br from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-600/30' : 'bg-slate-100 text-slate-400'}`}
+                            className={`flex flex-col items-center gap-1.5 min-w-[60px] p-2 rounded-[1.2rem] transition-all relative overflow-visible ${activeCategory === cat ? 'bg-linear-to-br from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-600/30' : 'bg-slate-100 text-slate-400'}`}
                         >
                             <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${activeCategory === cat ? 'bg-white/20' : 'bg-white/50'}`}>
                                 <Icon className="w-4 h-4"/>
                             </div>
                             <span className="text-[6px] font-black uppercase tracking-[1px] whitespace-nowrap">{cat}</span>
-                            <CountBadge count={showAllTimeTotals ? categoryTotals[cat] : (appData[formattedDate]?.[cat]?.filter(isItemActive).length || 0)} />
-                        </button>
+                            <CountBadge count={count} />
+                        </motion.button>
                     );
                 })}
             </div>
         </div>
       </header>
 
-      <main className="flex-1 px-4 space-y-4 mt-6 pb-48 relative z-10">
+      <motion.main 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="flex-1 px-4 space-y-4 mt-6 pb-48 relative z-10"
+      >
           <div 
             onClick={() => setCollapsedCategories(prev => ({ ...prev, [activeCategory]: !prev[activeCategory] }))}
             className={`flex items-center justify-center px-6 py-3.5 rounded-[1.5rem] shadow-lg transition-all duration-500 cursor-pointer active:scale-[0.98] mb-4 ${
@@ -583,7 +630,7 @@ const AppContent = () => {
               <span className="text-[6px] font-black text-slate-400 uppercase tracking-[4px]">Controle Box v1.0.4</span>
               <span className="text-[5px] font-black text-slate-300 uppercase tracking-[2px] mt-1">Build 20260302-1735</span>
           </div>
-      </main>
+      </motion.main>
 
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 border-t border-slate-200 p-4 pb-10 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] backdrop-blur-3xl max-w-[480px] mx-auto w-full">
           <div className="flex items-center justify-between">
@@ -627,8 +674,8 @@ const AppContent = () => {
                         <input type="text" autoFocus value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Contrato ou Serial..." className="w-full py-4 pl-12 pr-6 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-black text-sm text-slate-800 focus:bg-white transition-all shadow-inner" />
                     </div>
                     <div className="max-h-[350px] overflow-y-auto space-y-2 no-scrollbar">
-                        {searchResults.length > 0 ? searchResults.map((res, i) => (
-                            <button key={i} onClick={() => { setCurrentDate(new Date(res.date + 'T12:00:00')); setActiveCategory(res.category); setActiveModal(null); }} className="w-full text-left p-4 rounded-2xl bg-white border border-slate-100 flex flex-col gap-1 active:scale-[0.98] transition-all hover:bg-slate-50 shadow-sm">
+                        {searchResults.length > 0 ? searchResults.map((res) => (
+                            <button key={res.item.id} onClick={() => { setCurrentDate(new Date(res.date + 'T12:00:00')); setActiveCategory(res.category); setActiveModal(null); }} className="w-full text-left p-4 rounded-2xl bg-white border border-slate-100 flex flex-col gap-1 active:scale-[0.98] transition-all hover:bg-slate-50 shadow-sm">
                                 <div className="flex justify-between items-center">
                                     <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">{res.category}</span>
                                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{new Date(res.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
@@ -651,7 +698,7 @@ const AppContent = () => {
                         <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth() + 1); setCurrentDate(d); }} className="p-2 rounded-xl bg-slate-100 text-slate-600 active:scale-95 transition-all"><IconChevronRight className="w-5 h-5"/></button>
                     </div>
                     <div className="grid grid-cols-7 gap-1.5">
-                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => <div key={d} className="h-8 flex items-center justify-center text-[8px] font-black text-slate-400 uppercase tracking-widest">{d}</div>)}
+                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => <div key={`${d}-${i}`} className="h-8 flex items-center justify-center text-[8px] font-black text-slate-400 uppercase tracking-widest">{d}</div>)}
                         {(() => {
                             const year = currentDate.getFullYear();
                             const month = currentDate.getMonth();
@@ -682,9 +729,46 @@ const AppContent = () => {
             <Modal title="Configurações" onClose={() => setActiveModal(null)}>
                 <div className="space-y-6">
                     <div className="flex flex-col items-center mb-4">
-                        <div onClick={() => setCameraTarget({ category: activeCategory, item: 'profile' })} className="relative w-24 h-24 rounded-full bg-white/5 border-2 border-white/10 overflow-hidden cursor-pointer group">
-                            {userProfile.profileImage ? <img src={userProfile.profileImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full flex items-center justify-center"><IconCamera className="w-8 h-8 text-slate-600"/></div>}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><IconCameraLens className="w-6 h-6 text-white"/></div>
+                        <div className="relative">
+                            <div onClick={() => setCameraTarget({ category: activeCategory, item: 'profile' })} className="relative w-24 h-24 rounded-full bg-white/5 border-2 border-white/10 overflow-hidden cursor-pointer group">
+                                {userProfile.profileImage ? (
+                                    <img 
+                                        src={userProfile.profileImage} 
+                                        className="w-full h-full object-cover" 
+                                        onError={() => setUserProfile(prev => ({ ...prev, profileImage: '' }))}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <IconCamera className="w-8 h-8 text-slate-600"/>
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><IconCamera className="w-6 h-6 text-white"/></div>
+                            </div>
+                            <label className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center cursor-pointer active:scale-90 transition-all shadow-lg">
+                                <IconGallery className="w-4 h-4 text-white" />
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={async e => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = async (event) => {
+                                                const base64 = event.target?.result as string;
+                                                try {
+                                                    const compressed = await compressImage(base64, 180, 0.5, true);
+                                                    setUserProfile(prev => ({ ...prev, profileImage: compressed }));
+                                                } catch (e) {
+                                                    console.error("Error compressing gallery image", e);
+                                                    setUserProfile(prev => ({ ...prev, profileImage: base64 }));
+                                                }
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                    }}
+                                />
+                            </label>
                         </div>
                         <p className="mt-2 text-[8px] font-black text-slate-500 uppercase tracking-widest">Foto de Perfil</p>
                     </div>
@@ -719,12 +803,15 @@ const AppContent = () => {
                     <div className="grid grid-cols-1 gap-3">
                         <button 
                             onClick={() => { 
-                                const txt = generateMonthlyTxt(appData, currentDate);
+                                const txt = generateMonthlyTxt(appData, currentDate, userProfile);
                                 const blob = new Blob([txt], { type: "text/plain" });
                                 const url = URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 link.href = url;
-                                link.download = `relatorio_${currentDate.getMonth()+1}_${currentDate.getFullYear()}.txt`;
+                                const fileName = userProfile.name 
+                                    ? `Claro Box (${userProfile.name}) - ${formattedDate}` 
+                                    : `Controle de Produção - ${formattedDate}`;
+                                link.download = `${fileName}.txt`;
                                 link.click();
                             }} 
                             className="w-full py-4 px-6 rounded-2xl bg-white border border-slate-200 text-slate-900 flex items-center justify-between group active:scale-[0.98] transition-all shadow-sm"
@@ -749,16 +836,30 @@ const AppContent = () => {
                                 // Header
                                 doc.setFillColor(15, 23, 42);
                                 doc.rect(0, 0, 210, 40, 'F');
+                                
+                                // Profile Image in PDF
+                                if (userProfile.profileImage) {
+                                    try {
+                                        // Add the image
+                                        doc.addImage(userProfile.profileImage, 'JPEG', 10, 5, 30, 30, undefined, 'FAST');
+                                    } catch (e) {
+                                        console.error("Erro ao adicionar imagem ao PDF", e);
+                                    }
+                                }
+
                                 doc.setTextColor(255, 255, 255);
                                 doc.setFontSize(22);
                                 doc.setFont('helvetica', 'bold');
-                                doc.text('RELATÓRIO DE EQUIPAMENTOS', 105, 18, { align: 'center' });
+                                doc.text('RELATÓRIO DE EQUIPAMENTOS', 115, 18, { align: 'center' });
                                 doc.setFontSize(10);
                                 doc.setFont('helvetica', 'normal');
-                                doc.text(`RESPONSÁVEL: ${userProfile.name.toUpperCase()}`, 105, 26, { align: 'center' });
+                                doc.text(`RESPONSÁVEL: ${userProfile.name.toUpperCase() || 'NÃO INFORMADO'}`, 115, 26, { align: 'center' });
+                                if (userProfile.cpf) {
+                                    doc.text(`CPF: ${userProfile.cpf}`, 115, 30, { align: 'center' });
+                                }
                                 doc.setFontSize(12);
                                 doc.setFont('helvetica', 'bold');
-                                doc.text(`${monthName} ${currentDate.getFullYear()}`, 105, 34, { align: 'center' });
+                                doc.text(`${monthName} ${currentDate.getFullYear()}`, 115, 36, { align: 'center' });
 
                                 // Content
                                 doc.setTextColor(15, 23, 42);
@@ -840,7 +941,10 @@ const AppContent = () => {
                                 doc.text('FLUXO OPERACIONAL TOTAL:', 20, y);
                                 doc.text(`${somaTotalGeral} ITENS`, 180, y, { align: 'right' });
 
-                                doc.save(`relatorio_${currentDate.getMonth()+1}_${currentDate.getFullYear()}.pdf`); 
+                                const fileName = userProfile.name 
+                                    ? `Claro Box (${userProfile.name}) - ${formattedDate}` 
+                                    : `Controle de Produção - ${formattedDate}`;
+                                doc.save(`${fileName}.pdf`); 
                             }} 
                             className="w-full py-4 px-6 rounded-2xl bg-slate-900 text-white flex items-center justify-between group active:scale-[0.98] transition-all border border-white/10"
                         >
@@ -913,7 +1017,7 @@ const AppContent = () => {
                         </p>
                     </div>
                     <div className="pt-4">
-                        <p className="text-[8px] font-black text-slate-300 uppercase tracking-[10px]">Leo Luz</p>
+                        <p className="text-[8px] font-black text-slate-300 uppercase tracking-[10px]">Controle de Produção</p>
                     </div>
                     <button onClick={() => setActiveModal(null)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-[3px] text-[10px] active:scale-95 transition-all">Fechar</button>
                 </div>

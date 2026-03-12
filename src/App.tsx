@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useReducer, useRef, useMemo, Component } from 'react';
+import React, { useState, useEffect, useReducer, useRef, useMemo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { jsPDF } from 'jspdf';
 
@@ -54,13 +54,8 @@ const AppContent = () => {
 
   // Carregar notificações do localStorage
   useEffect(() => {
-    try {
-        const saved = localStorage.getItem('equipment_notifications');
-        if (saved) setNotifications(JSON.parse(saved));
-    } catch (e) {
-        console.error("Failed to parse notifications", e);
-        setNotifications([]);
-    }
+    const saved = localStorage.getItem('equipment_notifications');
+    if (saved) setNotifications(JSON.parse(saved));
   }, []);
 
   // Salvar notificações
@@ -141,13 +136,7 @@ const AppContent = () => {
     const timer = setTimeout(() => setIsLoading(false), 800);
     
     const savedData = localStorage.getItem('equipmentData');
-    if (savedData) {
-        try {
-            dispatch({ type: 'SET_DATA', payload: JSON.parse(savedData) });
-        } catch (e) {
-            console.error("Failed to parse equipmentData", e);
-        }
-    }
+    if (savedData) dispatch({ type: 'SET_DATA', payload: JSON.parse(savedData) });
     
     // Auto-shrink existing large profile images
     if (userProfile.profileImage && userProfile.profileImage.length > 50000) {
@@ -215,11 +204,7 @@ const AppContent = () => {
 
   useEffect(() => {
     if (isLoading) return;
-    try {
-        localStorage.setItem('equipmentData', JSON.stringify(appData));
-    } catch (e) {
-        console.error("Failed to save equipmentData to localStorage", e);
-    }
+    localStorage.setItem('equipmentData', JSON.stringify(appData));
     const debounceTimer = setTimeout(syncWithServer, 2000);
     return () => clearTimeout(debounceTimer);
   }, [appData, isLoading]);
@@ -233,10 +218,7 @@ const AppContent = () => {
     }
   }, [userProfile]);
 
-  const currentDayData = useMemo(() => {
-    if (!appData || typeof appData !== 'object') return createEmptyDailyData();
-    return appData[formattedDate] || createEmptyDailyData();
-  }, [appData, formattedDate]);
+  const currentDayData = useMemo(() => appData[formattedDate] || createEmptyDailyData(), [appData, formattedDate]);
 
   const handleUndo = () => {
     if (deleteMode) {
@@ -301,7 +283,6 @@ const AppContent = () => {
   };
 
   const somaTotalGeral = useMemo(() => {
-    if (!appData || typeof appData !== 'object') return 0;
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
     
@@ -318,10 +299,6 @@ const AppContent = () => {
 
   const categoryTotals = useMemo(() => {
     const totals: Record<string, number> = {};
-    if (!appData || typeof appData !== 'object') {
-        CATEGORIES.forEach(cat => totals[cat] = 0);
-        return totals;
-    }
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
 
@@ -863,41 +840,8 @@ const AppContent = () => {
                                 // Profile Image in PDF
                                 if (userProfile.profileImage) {
                                     try {
-                                        const imgProps = doc.getImageProperties(userProfile.profileImage);
-                                        const imgW = imgProps.width;
-                                        const imgH = imgProps.height;
-                                        const ratio = imgW / imgH;
-                                        
-                                        // Target area is a circle at (25, 20) with radius 15
-                                        // We want to cover a 30x30 square centered at (25, 20)
-                                        
-                                        doc.saveGraphicsState();
-                                        // Create circular clipping path
-                                        doc.circle(25, 20, 15, 'F');
-                                        doc.clip();
-                                        
-                                        let drawW, drawH, x, y;
-                                        if (ratio > 1) {
-                                            // Landscape: height is the constraint
-                                            drawH = 30;
-                                            drawW = 30 * ratio;
-                                            x = 25 - (drawW / 2);
-                                            y = 5;
-                                        } else {
-                                            // Portrait or square: width is the constraint
-                                            drawW = 30;
-                                            drawH = 30 / ratio;
-                                            x = 10;
-                                            y = 20 - (drawH / 2);
-                                        }
-                                        
-                                        doc.addImage(userProfile.profileImage, 'JPEG', x, y, drawW, drawH, undefined, 'FAST');
-                                        doc.restoreGraphicsState();
-                                        
-                                        // Add a subtle border over the clip
-                                        doc.setDrawColor(255, 255, 255);
-                                        doc.setLineWidth(0.5);
-                                        doc.circle(25, 20, 15, 'S');
+                                        // Add the image
+                                        doc.addImage(userProfile.profileImage, 'JPEG', 10, 5, 30, 30, undefined, 'FAST');
                                     } catch (e) {
                                         console.error("Erro ao adicionar imagem ao PDF", e);
                                     }

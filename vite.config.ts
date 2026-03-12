@@ -1,25 +1,49 @@
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig, loadEnv } from "vite"
+import react from "@vitejs/plugin-react"
+import path from "path"
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-      base: '/central-controle-v2/',
-      server: {
-        port: 3000,
-        host: '0.0.0.0',
-      },
-      plugins: [react(), tailwindcss()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
+
+  const env = loadEnv(mode, process.cwd(), "")
+
+  return {
+
+    base: "./",
+
+    plugins: [
+      react()
+    ],
+
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src")
       }
-    };
-});
+    },
+
+    define: {
+      __APP_ENV__: env.APP_ENV,
+      "process.env": env
+    },
+
+    server: {
+      host: true,
+      port: 5173
+    },
+
+    preview: {
+      port: 4173,
+      host: true
+    },
+
+    build: {
+      target: "es2019",
+      outDir: "dist",
+      assetsDir: "assets",
+      sourcemap: false,
+      emptyOutDir: true,
+      chunkSizeWarningLimit: 1000
+    }
+
+  }
+
+})

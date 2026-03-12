@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useReducer, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useReducer, useRef, useMemo, Component } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { jsPDF } from 'jspdf';
 
@@ -54,8 +54,13 @@ const AppContent = () => {
 
   // Carregar notificações do localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('equipment_notifications');
-    if (saved) setNotifications(JSON.parse(saved));
+    try {
+        const saved = localStorage.getItem('equipment_notifications');
+        if (saved) setNotifications(JSON.parse(saved));
+    } catch (e) {
+        console.error("Failed to parse notifications", e);
+        setNotifications([]);
+    }
   }, []);
 
   // Salvar notificações
@@ -136,7 +141,13 @@ const AppContent = () => {
     const timer = setTimeout(() => setIsLoading(false), 800);
     
     const savedData = localStorage.getItem('equipmentData');
-    if (savedData) dispatch({ type: 'SET_DATA', payload: JSON.parse(savedData) });
+    if (savedData) {
+        try {
+            dispatch({ type: 'SET_DATA', payload: JSON.parse(savedData) });
+        } catch (e) {
+            console.error("Failed to parse equipmentData", e);
+        }
+    }
     
     // Auto-shrink existing large profile images
     if (userProfile.profileImage && userProfile.profileImage.length > 50000) {
@@ -204,7 +215,11 @@ const AppContent = () => {
 
   useEffect(() => {
     if (isLoading) return;
-    localStorage.setItem('equipmentData', JSON.stringify(appData));
+    try {
+        localStorage.setItem('equipmentData', JSON.stringify(appData));
+    } catch (e) {
+        console.error("Failed to save equipmentData to localStorage", e);
+    }
     const debounceTimer = setTimeout(syncWithServer, 2000);
     return () => clearTimeout(debounceTimer);
   }, [appData, isLoading]);
@@ -218,7 +233,10 @@ const AppContent = () => {
     }
   }, [userProfile]);
 
-  const currentDayData = useMemo(() => appData[formattedDate] || createEmptyDailyData(), [appData, formattedDate]);
+  const currentDayData = useMemo(() => {
+    if (!appData || typeof appData !== 'object') return createEmptyDailyData();
+    return appData[formattedDate] || createEmptyDailyData();
+  }, [appData, formattedDate]);
 
   const handleUndo = () => {
     if (deleteMode) {
@@ -283,6 +301,7 @@ const AppContent = () => {
   };
 
   const somaTotalGeral = useMemo(() => {
+    if (!appData || typeof appData !== 'object') return 0;
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
     
@@ -299,6 +318,10 @@ const AppContent = () => {
 
   const categoryTotals = useMemo(() => {
     const totals: Record<string, number> = {};
+    if (!appData || typeof appData !== 'object') {
+        CATEGORIES.forEach(cat => totals[cat] = 0);
+        return totals;
+    }
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
 

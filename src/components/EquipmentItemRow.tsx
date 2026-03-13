@@ -27,20 +27,31 @@ export const EquipmentItemRow: React.FC<EquipmentItemRowProps> = ({
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const handleContractChange = (val: string) => {
-        if (val.length <= 10) {
-            onUpdate({ ...item, contract: val });
-            if (val.length === 10) {
+        // Remove newlines and limit to 20 characters for safety, though user said 10 digits
+        const cleanVal = val.replace(/\n/g, '').slice(0, 20);
+        onUpdate({ ...item, contract: cleanVal });
+        if (cleanVal.length >= 10) {
+            setTimeout(() => {
                 serialRef.current?.focus();
-            }
+            }, 10);
         }
     };
 
     const handleContractPaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
         const pastedData = e.clipboardData.getData('text');
-        onUpdate({ ...item, contract: pastedData });
+        const lines = pastedData.split(/\r?\n/).filter(l => l.trim() !== '');
+        
+        // Even if it's less than 10 digits, go to serial
+        // If multiple lines, we'll just take the first one for this field
+        const firstLine = lines[0] || '';
+        onUpdate({ ...item, contract: firstLine });
+        
         setTimeout(() => {
             serialRef.current?.focus();
-        }, 50);
+            // On mobile, sometimes we need to trigger a click or focus twice
+            serialRef.current?.click();
+        }, 100);
     };
 
     const finishItem = () => {
@@ -55,20 +66,32 @@ export const EquipmentItemRow: React.FC<EquipmentItemRowProps> = ({
     };
 
     const handleSerialChange = (val: string) => {
-        if (val.length <= 20) {
-            onUpdate({ ...item, serial: val });
-            if (val.length === 20) {
-                finishItem();
-            }
+        const cleanVal = val.replace(/\n/g, '').slice(0, 30);
+        onUpdate({ ...item, serial: cleanVal });
+        if (cleanVal.length >= 20) {
+            finishItem();
         }
     };
 
     const handleSerialPaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
         const pastedData = e.clipboardData.getData('text');
-        onUpdate({ ...item, serial: pastedData });
-        setTimeout(() => {
-            finishItem();
-        }, 50);
+        const lines = pastedData.split(/\r?\n/).filter(l => l.trim() !== '');
+        
+        if (lines.length > 0) {
+            // Se colar algo que seja menos de 20 linhas ele completa a atividade e abre uma nova
+            if (lines.length < 20) {
+                onUpdate({ ...item, serial: lines[0] });
+                setTimeout(() => {
+                    finishItem();
+                }, 100);
+            } else {
+                // Se for mais de 20 linhas, talvez o usuário queira apenas colar o texto?
+                // Mantemos o comportamento de apenas atualizar sem finalizar automaticamente
+                // para evitar erros em colagens massivas acidentais
+                onUpdate({ ...item, serial: pastedData });
+            }
+        }
     };
 
     const variants = {
